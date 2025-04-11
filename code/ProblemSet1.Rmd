@@ -1,0 +1,1590 @@
+---
+title: "Problem Set 1"
+author: "_____"
+date: "2025-03-26"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    number_sections: true
+    highlight: tango
+    keep_tex: true
+    df_print: kable
+knitr:
+  opts_chunk:
+    echo: false
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Problem 1
+
+This problem involves analyzing current account balances and exchange rates across countries using diverse datasets. The objective is to familiarize you with widely-used data resources in international macroeconomics, enhancing your ability to interpret real-world economic dynamics.
+
+## Problem 1.1: IMF World Economic Outlook Database 
+
+Access the IMF World Economic Outlook Database (October 2024 Edition) via this link. Download the following time series for China, Japan, and the United States (2000–2024): (i) Current account balance in absolute terms (U.S. dollars); and (ii) Current account balance as a percentage of GDP.
+
+```{r, echo=FALSE}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(kableExtra)
+
+data <- suppressWarnings(read_excel("/Users/thisisazaro/Library/Mobile Documents/com~apple~CloudDocs/REPETIT/International Finance/international-finance/data/WEOOct2024all.xlsx"))
+countries <- c("China", "Japan", "United States")
+indicators <- c("Current account balance", "Current account balance (% of GDP)")
+filtered <- data %>%
+  filter(Country %in% countries,
+         `Subject Descriptor` %in% indicators)
+year_cols <- as.character(2000:2024)
+filtered[year_cols] <- lapply(filtered[year_cols], function(x) as.numeric(as.character(x)))
+
+analyze_country <- function(country_name) {
+  cat("======", country_name, "======\n")
+  
+  df_abs <- filtered %>%
+    filter(Country == country_name,
+           `Subject Descriptor` == "Current account balance",
+           Units == "U.S. dollars") %>%
+    select(all_of(year_cols)) %>%
+    pivot_longer(cols = everything(), names_to = "Year", values_to = "CAB_USD") %>%
+    mutate(Year = as.integer(Year),
+           CAB_USD = as.numeric(CAB_USD))
+  
+  df_pct <- filtered %>%
+  filter(Country == country_name, 
+         `Subject Descriptor` == "Current account balance",
+         Units == "Percent of GDP") %>%
+  select(all_of(year_cols)) %>%
+  pivot_longer(cols = everything(), names_to = "Year", values_to = "CAB_PCT") %>%
+  mutate(Year = as.integer(Year),
+         CAB_PCT = as.numeric(CAB_PCT))
+  
+  df <- left_join(df_abs, df_pct, by = "Year") %>%
+    arrange(Year)
+  df <- df %>% filter(!is.na(CAB_USD))
+
+  ggplot(df, aes(x = Year, y = CAB_USD)) +
+    geom_line(color = "blue") +
+    geom_point(color = "black") +
+    ggtitle(paste0(country_name, " - Current account balance (USD Billions)")) +
+    xlab("Year") + ylab("USD Billions") +
+    theme_minimal() -> p1
+  print(p1)
+
+  if (any(!is.na(df$CAB_PCT))) {
+    ggplot(df, aes(x = Year, y = CAB_PCT)) +
+      geom_line(color = "darkgreen") +
+      geom_point(color = "black") +
+      ggtitle(paste0(country_name, " - Current account balance (% of GDP)")) +
+      xlab("Year") + ylab("% of GDP") +
+      theme_minimal() -> p2
+    print(p2)
+  } else {
+    cat("No data available for current account balance (% of GDP)\n")
+  }
+
+  df <- df %>%
+    mutate(Delta = CAB_USD - lag(CAB_USD))
+  
+  if (country_name != "United States") {
+    min_delta <- df %>% filter(!is.na(Delta)) %>% slice_min(Delta, n = 1)
+    cat("Year with largest annual decline in current account surplus:", min_delta$Year, "\n")
+    cat("Decline amount:", round(min_delta$Delta, 2), "billion USD\n\n")
+  } else {
+    max_deficit_increase <- df %>% filter(!is.na(Delta)) %>% slice_min(Delta, n = 1)
+    cat("Year with largest annual increase in current account deficit:", max_deficit_increase$Year, "\n")
+    cat("Deficit increase:", round(max_deficit_increase$Delta, 2), "billion USD\n\n")
+  }
+}
+
+```
+
+We analyze current account balances for China, Japan, and the United States using IMF WEO (Oct 2024) data.
+
+### For China: 
+
+Plot two graphs—one for absolute values (U.S. dollars) and one for percentage of GDP. Identify the year with the largest annual decline in current account surplus compared to the previous year.
+
+
+```{r, echo=FALSE}
+analyze_country("China")
+```
+
+China experienced the largest drop in current account surplus in 2023, down by $190.39 billion.
+
+### For Japan: 
+Repeat the same analysis as for China.
+
+```{r, echo=FALSE}
+analyze_country("Japan")
+```
+
+Japan saw the largest drop in 2022, decreasing by $106.23 billion.
+
+### For the United States: 
+Plot both measures and determine the year with the largest annual increase in current account deficits.
+
+```{r, echo=FALSE}
+analyze_country("United States")
+```
+
+The United States had its sharpest increase in deficit in 2021, worsening by $266.78 billion.
+
+## Problem 1.2: Bureau of Economic Analysis (BEA) U.S. International Transactions
+Navigate to Table 1.1. U.S. International Transactions and download the annual series for Balance on current account (2000–2024) using the formula Line 1 less Line 9.
+
+```{r, echo=FALSE}
+# Load BEA data
+bea_data <- read_excel("/Users/thisisazaro/Library/Mobile Documents/com~apple~CloudDocs/REPETIT/International Finance/international-finance/data/Table11_US_InternationalTransactions.xlsx", sheet = 2)
+
+year_cols <- as.character(2000:2024)
+line1 <- bea_data %>% filter(Line == "1")
+line9 <- bea_data %>% filter(Line == "9")
+bea_balance <- data.frame(
+  Year = as.integer(year_cols),
+  Exports = as.numeric(line1[, year_cols]),
+  Imports = as.numeric(line9[, year_cols])
+) %>%
+  mutate(BEA_CAB = Exports - Imports)
+
+```
+
+
+### Plot the U.S. current account balance using BEA data. 
+Compare this graph with the IMF-derived series and highlight discrepancies (if any).
+
+```{r, echo=FALSE}
+ggplot(bea_balance, aes(x = Year, y = BEA_CAB)) +
+  geom_line(color = "darkred", size = 1) +
+  geom_point(color = "black") +
+  ggtitle("U.S. Current Account Balance (BEA, Line 1 - Line 9)") +
+  xlab("Year") + ylab("USD Billions") +
+  theme_minimal()
+
+
+df_imf_us <- filtered %>%
+  filter(Country == "United States", 
+         `Subject Descriptor` == "Current account balance", 
+         Units == "U.S. dollars") %>%
+  select(all_of(year_cols)) %>%
+  pivot_longer(cols = everything(), names_to = "Year", values_to = "IMF_CAB") %>%
+  mutate(Year = as.integer(Year), IMF_CAB = as.numeric(IMF_CAB))
+compare_df <- left_join(bea_balance, df_imf_us, by = "Year")
+compare_df <- compare_df %>%
+  mutate(BEA_CAB_bln = BEA_CAB / 1000)
+
+ggplot(compare_df, aes(x = Year)) +
+  geom_line(aes(y = BEA_CAB_bln, color = "BEA", linetype = "BEA"), size = 1.1) +
+  geom_line(aes(y = IMF_CAB, color = "IMF", linetype = "IMF"), size = 1.1) +
+  geom_point(aes(y = BEA_CAB_bln, color = "BEA")) +
+  geom_point(aes(y = IMF_CAB, color = "IMF")) +
+  scale_color_manual(values = c("BEA" = "lightblue", "IMF" = "red")) +
+  scale_linetype_manual(values = c("BEA" = "solid", "IMF" = "dotted")) +
+  ggtitle("U.S. Current Account Balance: BEA vs. IMF") +
+  xlab("Year") + ylab("USD Billions") +
+  theme_minimal()
+
+
+```
+
+## Problem 1.3: FRED Download the monthly nominal exchange rate for Chinese RMB to U.S. Dollar from FRED series DEXCHUS (January 2000 – January 2025). 
+
+Obtain the euro to U.S. dollar (EUR/USD) rate for the same period from FRED.
+
+### Compute the CNY/EUR cross rate using the formula. Plot the derived cross rate time series and annotate key trends.
+
+Objective:
+Calculate the monthly **CNY/EUR cross rate** for the period **January 2000 – January 2025**, using data from the FRED database:
+- **DEXCHUS**: Chinese Yuan per U.S. Dollar (CNY/USD)
+- **DEXUSEU**: U.S. Dollar per Euro (USD/EUR)
+
+Formula:
+
+The CNY/EUR cross rate is computed using the formula:
+
+\[
+\text{CNY/EUR} = \frac{\text{CNY/USD}}{\text{USD/EUR}}
+\]
+
+This expresses how many Chinese yuan are needed to buy one euro, using USD as the common denominator.
+
+```{r, echo=FALSE}
+library(lubridate)
+library(zoo)
+dexchus <- read_excel("/Users/thisisazaro/Library/Mobile Documents/com~apple~CloudDocs/REPETIT/International Finance/international-finance/data/DEXCHUS.xlsx", sheet = 2) %>%
+  rename(Date = 1, CNY_per_USD = 2) %>%
+  mutate(Date = as.Date(Date),
+         CNY_per_USD = as.numeric(CNY_per_USD)) %>%
+  filter(Date >= as.Date("2000-01-01") & Date <= as.Date("2025-01-31"))
+
+dexuseu <- read_excel("/Users/thisisazaro/Library/Mobile Documents/com~apple~CloudDocs/REPETIT/International Finance/international-finance/data/DEXUSEU.xlsx", sheet = 2) %>%
+  rename(Date = 1, USD_per_EUR = 2) %>%
+  mutate(Date = as.Date(Date),
+         USD_per_EUR = as.numeric(USD_per_EUR)) %>%
+  filter(Date >= as.Date("2000-01-01") & Date <= as.Date("2025-01-31"))
+
+cny_usd <- dexchus %>%
+  filter(!is.na(CNY_per_USD)) %>%
+  mutate(Month = floor_date(Date, "month")) %>%
+  group_by(Month) %>%
+  summarise(CNY_per_USD = mean(CNY_per_USD, na.rm = TRUE))
+
+eur_usd <- dexuseu %>%
+  filter(!is.na(USD_per_EUR)) %>%
+  mutate(Month = floor_date(Date, "month")) %>%
+  group_by(Month) %>%
+  summarise(USD_per_EUR = mean(USD_per_EUR, na.rm = TRUE))
+
+cross_rates <- left_join(cny_usd, eur_usd, by = "Month") %>%
+  mutate(CNY_per_EUR = CNY_per_USD / USD_per_EUR,
+         CNY_per_EUR_SMA3 = rollmean(CNY_per_EUR, k = 3, fill = NA, align = "right"))
+
+ggplot(cross_rates, aes(x = Month)) +
+  geom_line(aes(y = CNY_per_EUR), color = "lightblue", alpha = 0.4) +
+        geom_line(data = cross_rates %>% filter(!is.na(CNY_per_EUR_SMA3)),
+          aes(y = CNY_per_EUR_SMA3), color = "darkblue", size = 1) +
+  geom_vline(xintercept = as.Date(c("2005-07-21", "2008-09-15", "2020-03-01", "2022-02-24")),
+             linetype = "dashed", color = "red", size = 0.4) +
+  annotate("text", x = as.Date("2005-07-21"), y = 9.5, label = "CNY Float Reform", angle = 90, vjust = -0.4, size = 3) +
+  annotate("text", x = as.Date("2008-09-15"), y = 9.5, label = "Global Crisis", angle = 90, vjust = -0.4, size = 3) +
+  annotate("text", x = as.Date("2020-03-01"), y = 9.5, label = "COVID-19", angle = 90, vjust = -0.4, size = 3) +
+  annotate("text", x = as.Date("2022-02-24"), y = 9.5, label = "Ukraine War", angle = 90, vjust = -0.4, size = 3) +
+  ggtitle("CNY per EUR (Cross Rate) — Key Events Highlighted") +
+  xlab("Date") + ylab("CNY per EUR") +
+  theme_minimal()
+
+
+```
+
+Key Observations:
+2000–2005: The CNY/EUR rate was high (~9.5), reflecting the yuan's peg to the USD and euro appreciation.
+2005-07-21: After the CNY Float Reform, the yuan started a gradual appreciation.
+2008 Global Financial Crisis: Led to euro appreciation, lowering the CNY/EUR cross rate.
+2015–2020: Moderate volatility and gradual rise in CNY/EUR, signaling RMB weakness.
+2022–2023: Spikes due to COVID-19 recovery and Ukraine conflict created instability.
+
+This analysis illustrates how cross exchange rates can be derived from bilateral rates and used to monitor relative currency dynamics between trading blocs (China and Eurozone). Key historical events align closely with spikes or trends in the CNY/EUR rate, confirming the responsiveness of currency markets to global shocks and policy shifts.
+
+
+# Problem 2: Exchange Rate Changes and Cross Rate Calculation
+
+## Problem 2(a): Computing Exchange Rates
+
+**Task:**  
+Compute the U.S. dollar–yen exchange rate \( E_{\$/¥} \) and the U.S. dollar–Canadian dollar exchange rate \( E_{\$/C\$} \) on January 20, 2016, and January 20, 2015.
+
+```{r, echo=FALSE}
+exchange_rates <- data.frame(
+  Country = c("Australia", "Canada", "Denmark", "Eurozone", "Hong Kong", "India", "Japan", "Mexico", "Sweden", "UK", "USA"),
+  Currency = c("AUD", "CAD", "DKK", "EUR", "HKD", "INR", "JPY", "MXN", "SEK", "GBP", "USD"),
+  FX_per_USD_2016 = c(1.459, 1.451, 6.844, 0.917, 7.827, 68.05, 116.38, 18.60, 8.583, 0.706, 1.000),
+  FX_per_USD_2015 = c(1.223, 1.209, 6.430, 0.865, 7.752, 61.64, 118.48, 14.647, 8.181, 0.600, 1.000)
+)
+kable(exchange_rates)
+```
+
+
+**Solution:**
+
+```{r, echo=FALSE}
+# USD/JPY
+usd_to_jpy_2016 <- exchange_rates$FX_per_USD_2016[exchange_rates$Currency == "JPY"]
+usd_to_jpy_2015 <- exchange_rates$FX_per_USD_2015[exchange_rates$Currency == "JPY"]
+
+# USD/CAD
+usd_to_cad_2016 <- exchange_rates$FX_per_USD_2016[exchange_rates$Currency == "CAD"]
+usd_to_cad_2015 <- exchange_rates$FX_per_USD_2015[exchange_rates$Currency == "CAD"]
+
+# Вывод результатов
+cat("USD to JPY on Jan 20, 2016:", usd_to_jpy_2016, "\n")
+cat("USD to JPY on Jan 20, 2015:", usd_to_jpy_2015, "\n")
+cat("USD to CAD on Jan 20, 2016:", usd_to_cad_2016, "\n")
+cat("USD to CAD on Jan 20, 2015:", usd_to_cad_2015, "\n")
+
+```
+
+- The **USD/JPY** exchange rate **decreased** slightly from **118.48 to 116.38**, indicating that the Japanese yen **strengthened** against the U.S. dollar over the year.
+- The **USD/CAD** exchange rate **increased** from **1.209 to 1.451**, meaning that the Canadian dollar **weakened** against the U.S. dollar during the same period.
+
+These changes reflect shifts in relative economic performance, interest rates, and commodity prices, especially oil (important for Canada).
+
+
+## Problem 2(b): Percentage Change in the Value of the U.S. Dollar
+
+We compute the percentage change in the U.S. dollar value relative to Japanese yen and Canadian dollar using the formula:
+
+\[
+\text{Percentage Change} = \left( \frac{E_{t} - E_{t-1}}{E_{t-1}} \right) \times 100
+\]
+
+```{r, echo=FALSE}
+change_usd_jpy <- ((usd_to_jpy_2016 - usd_to_jpy_2015) / usd_to_jpy_2015) * 100
+change_usd_cad <- ((usd_to_cad_2016 - usd_to_cad_2015) / usd_to_cad_2015) * 100
+
+cat("USD to JPY % change:", round(change_usd_jpy, 2), "%\n")
+cat("USD to CAD % change:", round(change_usd_cad, 2), "%\n")
+```
+
+The U.S. dollar depreciated by 1.77% against the Japanese yen.
+The U.S. dollar appreciated by 20.01% against the Canadian dollar between January 20, 2015, and January 20, 2016.
+
+## Problem 2(c): Danish Krone–Canadian Dollar Exchange Rate on January 20, 2016
+
+**Task:**  
+Using the data for January 20, 2016, compute the Danish krone–Canadian dollar exchange rate \( E_{\text{krone/C\$}} \).
+
+**Given:**
+
+- Danish krone per U.S. dollar \( E_{\text{krone/\$}} = 6.844 \)
+- Canadian dollar per U.S. dollar \( E_{\text{CAD/\$}} = 1.451 \)
+
+We calculate the cross exchange rate using:
+
+\[
+E_{\text{krone/C\$}} = \frac{E_{\text{krone/\$}}}{E_{\text{CAD/\$}}}
+\]
+
+```{r, echo=FALSE}
+krone_per_usd <- 6.844
+cad_per_usd <- 1.451
+
+krone_per_cad <- krone_per_usd / cad_per_usd
+cat("Danish krone per Canadian dollar:", round(krone_per_cad, 4), "\n")
+
+```
+
+On January 20, 2016, 1 Canadian dollar could be exchanged for approximately 4.7163 Danish kroner.
+
+# Problem 3: U.S. Effective Exchange Rate and Bilateral Changes
+
+**Given:**
+We are provided with trade weights (shares) and exchange rates for four of the United States' largest trading partners: Canada, Mexico, China, and Japan. Exchange rates are expressed in **USD per unit of foreign currency** for both 2015 and 2016.
+
+```{r, echo=FALSE}
+# ====== INPUT DATA ======
+
+exchange_rates_problem_3 <- data.frame(
+  country = c("Canada", "Mexico", "China", "Japan"),
+  share_trade = c(0.36, 0.28, 0.20, 0.16),
+  USD_per_fx_2015 = c(0.8271, 0.0683, 0.1608, 0.0080),
+  USD_per_fx_2016 = c(0.6892, 0.0538, 0.1522, 0.0086)
+)
+kable(exchange_rates_problem_3)
+
+```
+
+## Problem 3(a) Compute the percentage change in bilateral exchange rates (USD per FX):
+
+The percentage change in each bilateral exchange rate is calculated using the formula:
+
+\[
+\text{Percentage Change} = \left( \frac{E_{2016} - E_{2015}}{E_{2015}} \right) \times 100
+\]
+
+**Results:**
+
+```{r, echo=FALSE}
+# ====== (a) Percentage Change in Bilateral Exchange Rates ======
+exchange_rates_problem_3$pct_change <- with(exchange_rates_problem_3,
+                                            (USD_per_fx_2016 - USD_per_fx_2015) / USD_per_fx_2015 * 100)
+
+# Show results
+library(knitr)
+kable(exchange_rates_problem_3, digits = 4, caption = "Bilateral Exchange Rate Changes (USD per FX)")
+
+
+
+```
+
+The U.S. dollar **depreciated** against the Japanese yen (positive % change), but **appreciated** against the other three currencies (negative % change, i.e., fewer dollars per unit of foreign currency).
+
+## Problem 3(b) Compute the Nominal Effective Exchange Rate (NEER):
+
+We calculate NEER as a **weighted average** of the bilateral exchange rates using the trade shares as weights.
+
+\[
+\text{NEER}_{2015} = \sum (w_i \cdot E_{2015,i}) = 0.35032 \\
+\text{NEER}_{2016} = \sum (w_i \cdot E_{2016,i}) = 0.29499
+\]
+
+Then compute the percentage change in NEER:
+
+\[
+\text{NEER Change} = \left( \frac{0.29499 - 0.35032}{0.35032} \right) \times 100 \approx -15.79\%
+\]
+
+```{r}
+
+# ====== (b) NOMINAL EFFECTIVE EXCHANGE RATE (NEER) ======
+# Compute NEER for 2015 and 2016
+neer_2015 <- sum(exchange_rates_problem_3$share_trade * exchange_rates_problem_3$USD_per_fx_2015)
+neer_2016 <- sum(exchange_rates_problem_3$share_trade * exchange_rates_problem_3$USD_per_fx_2016)
+
+# % Change in NEER
+neer_change <- (neer_2016 - neer_2015) / neer_2015 * 100
+
+cat("NEER in 2015:", round(neer_2015, 5), "\n")
+cat("NEER in 2016:", round(neer_2016, 5), "\n")
+cat("Percentage change in NEER:", round(neer_change, 2), "%\n")
+```
+
+
+## Problem 3(c) Interpretation and Comparison:
+
+- The **nominal effective exchange rate (NEER)** **fell by 15.79%**, meaning that **the U.S. dollar appreciated** on average against this trade-weighted currency basket from 2015 to 2016.
+- This appreciation reflects that fewer U.S. dollars were needed per unit of foreign currency on average, except for the Japanese yen.
+- Compared to the **Mexican peso**, which saw a **21.23% depreciation** of the peso relative to the dollar (i.e., the dollar strengthened the most against the peso), the effective appreciation of the dollar (**15.79%**) is slightly less dramatic but still significant.
+- In summary, the U.S. dollar **strengthened notably** against most major trade partners in this period, with the **strongest bilateral appreciation against the Mexican peso** and a **modest depreciation against the Japanese yen**.
+
+
+# Problem 4: Dutch Investor — Interest Parity and Exchange Rates
+
+**Given:**
+
+- Initial amount: €1,000
+
+- Dutch interest rate: **5%**
+
+- British interest rate: **1%**
+
+- Spot rate \( E_{\text{spot}} \): **1.5 euros per pound**
+
+- Forward rate \( E_{\text{forward}} \): **1.65 euros per pound**
+
+## Problem 4(a) What is the euro-denominated return on Dutch deposits?
+
+This is a **domestic investment**, so the return is simply the Dutch interest rate:
+
+\[
+\text{Return} = 5\%
+\Rightarrow 1000 \times (1 + 0.05) = €1050
+\]
+
+## Problem 4(b) What is the (riskless) euro-denominated return on British deposits using forward cover?
+
+Steps:
+1. Convert euros to pounds at spot rate:  
+   \[
+   £ = \frac{1000}{1.5} = £666.67
+   \]
+2. Earn 1% interest in Britain:  
+   \[
+   £666.67 \times 1.01 = £673.33
+   \]
+3. Convert back to euros at **forward rate**:
+   \[
+   € = £673.33 \times 1.65 = €1110
+   \]
+
+**Return in euros**:
+\[
+\frac{1110 - 1000}{1000} = 11\%
+\]
+
+## Problem 4(c) Is there an arbitrage opportunity? Is this an equilibrium?
+
+Yes, there **is an arbitrage opportunity**:
+- Dutch investment yields **5%**
+- British investment with forward cover yields **11%**
+
+Since the **covered return** on British deposits is higher than the domestic return, a Dutch investor can:
+- Borrow in euros at 5%, convert to pounds, invest in UK at 1%, and lock in 11% return using the forward contract.
+
+This is **not an equilibrium**, because arbitrage would put upward pressure on the spot rate (more demand for pounds), and downward pressure on the forward rate (more forward selling of pounds), until **CIP holds**.
+
+---
+
+## Problem 4(d) What is the equilibrium forward rate according to CIP?
+
+Using the **Covered Interest Parity (CIP)** condition:
+
+\[
+\frac{1 + i_{\text{€}}}{1 + i_{£}} = \frac{F}{E}
+\Rightarrow \frac{1.05}{1.01} = \frac{F}{1.5}
+\Rightarrow F = \frac{1.05}{1.01} \times 1.5 \approx 1.56
+\]
+
+So, the **equilibrium forward rate** should be **€1.56 per £**.
+
+## Problem 4(e) Compute the forward premium on the British pound.
+
+Forward premium:
+
+\[
+\text{Premium} = \frac{F - E}{E} = \frac{1.56 - 1.5}{1.5} = 0.04 = 4\%
+\]
+
+**Answer:** The **forward premium is +4%**, i.e. **positive**.  
+This is required in equilibrium to offset the lower British interest rate (1%) relative to the Dutch rate (5%), ensuring investors are indifferent between domestic and foreign deposits when forward cover is used.
+
+## Problem 4(f) If UIP holds, what is the expected depreciation of the euro?
+
+**Uncovered Interest Parity (UIP):**
+
+\[
+\frac{1 + i_{€}}{1 + i_{£}} = \frac{E^{e}}{E}
+\Rightarrow \frac{1.05}{1.01} = \frac{E^{e}}{1.5}
+\Rightarrow E^{e} = \frac{1.05}{1.01} \times 1.5 \approx 1.56
+\]
+
+So, expected future spot rate is **€1.56 per £**, implying:
+
+\[
+\text{Expected depreciation of euro} = \frac{1.56 - 1.5}{1.5} = 4\%
+\]
+
+## Problem 4(g) Expected euro–pound exchange rate one year ahead?
+
+From (f):  
+\[
+E^{e}_{1\text{yr}} = €1.56/\text{£}
+\]
+
+**Summary of Answers**
+
+| Question | Answer |
+|---------|--------|
+| 4(a) | 5% return (€1050) |
+| 4(b) | 11% return (€1110) |
+| 4(c) | Arbitrage exists (not equilibrium) |
+| 4(d) | Equilibrium forward rate: €1.56/£ |
+| 4(e) | Forward premium = +4% (positive) |
+| 4(f) | Expected depreciation of euro = 4% |
+| 4(g) | Expected future rate = €1.56/£ |
+
+
+# Problem 5: Coffee Prices and the Law of One Price
+
+**Given:**
+
+- **Vietnam price of coffee:** 4,500 VND per pound
+
+- **Exchange rate:** \( E_{\text{VND/XOF}} = 30 \) (30 dong per 1 CFA franc)
+
+- **Côte d’Ivoire price of coffee (observed):** 160 CFA francs per pound
+
+
+## Problem 5(a) What is the price of coffee in Côte d’Ivoire **if the law of one price holds**?
+
+To convert the Vietnamese price to CFA francs using the exchange rate:
+
+\[
+\text{Price in CFA} = \frac{4500 \ \text{VND}}{30 \ \text{VND/XOF}} = 150 \ \text{CFA francs}
+\]
+
+**Answer:**  
+If the **law of one price** holds, coffee should cost **150 CFA francs** per pound in Côte d’Ivoire.
+
+
+## Problem 5(b) What happens if the actual price in Côte d’Ivoire is 160 CFA francs?
+
+### Step 1: Compute the **relative price**:
+
+\[
+\text{Relative price (Côte d’Ivoire vs Vietnam)} = \frac{160}{150} = 1.0667
+\]
+
+So coffee in Côte d’Ivoire is about **6.67% more expensive** than in Vietnam.
+
+### Step 2: Arbitrage logic:
+
+Since coffee is cheaper in Vietnam (after adjusting for exchange rates), **traders will:**
+
+- **Buy coffee in Vietnam** (at 4,500 VND or 150 CFA)
+- **Sell it in Côte d’Ivoire** (at 160 CFA)
+
+### Step 3: Market effects:
+
+- **In Vietnam:**  
+  Increased demand will **raise the domestic price** of coffee in dong (VND).
+  
+- **In Côte d’Ivoire:**  
+  Increased supply from imports will **push down the price** of coffee in CFA francs.
+
+These price movements will continue until the prices equalize across countries (i.e., the law of one price is restored).
+
+
+**Summary of Answers**
+
+| Question | Answer |
+|----------|--------|
+| 5(a) | Law of one price → 150 CFA francs per pound |
+| 5(b) | Relative price = 1.0667 (6.67% higher in Côte d’Ivoire); traders will buy in Vietnam and sell in Côte d’Ivoire, raising the price in Vietnam and lowering it in Côte d’Ivoire |
+
+
+# Problem 6: Currency Valuation and Exchange Rate Expectations
+
+We use Purchasing Power Parity (PPP) and Real Exchange Rate (RER) analysis to assess whether each currency is over- or under-valued relative to the U.S. dollar and to predict expected real exchange rate movements.
+
+```{r}
+# ===== Input Data =====
+countries <- data.frame(
+  country = c("Brazil", "India", "Mexico", "South Africa", "Zimbabwe"),
+  currency = c("real", "rupee", "peso", "rand", "Z$"),
+  E_fx_usd = c(4.07, 68.51, 18.89, 15.78, 101347),
+  basket_local = c(520, 12000, 1800, 800, 4000000)
+)
+
+kable(countries)
+```
+
+**Formula used:**
+
+- Real Exchange Rate (RER):  
+  \[
+  \text{RER} = \frac{E_{\text{FX}/\$} \times P_{US}}{P_{\text{local}}}
+  \]
+- PPP holds when RER ≈ 1
+
+**U.S. price of the basket:** $190
+
+```{r, echo=FALSE}
+# Cost of basket in US
+P_usd <- 190
+
+# ===== Compute Basket Price in USD and RER =====
+countries$basket_usd <- countries$basket_local / countries$E_fx_usd
+countries$RER <- with(countries, E_fx_usd * P_usd / basket_local)
+
+# ===== Determine PPP and Valuation =====
+countries$PPP_holds <- ifelse(abs(countries$RER - 1) < 0.05, "Y", "N")
+countries$Valuation <- ifelse(countries$RER > 1, "Under-valued", "Over-valued")
+countries$RER_expect <- ifelse(countries$RER > 1, "Appreciation", "Depreciation")
+
+# ===== Final Table =====
+library(knitr)
+#kable(countries[, c("country", "E_fx_usd", "basket_local", "basket_usd", "RER", 
+#                    "PPP_holds", "Valuation", "RER_expect")], digits = 3,
+#      caption = "Currency Valuation and Exchange Rate Expectations")
+
+```
+
+**Results:**
+
+| Country        | FX Rate (per $) | Basket Price (Local) | Basket Price (USD) | RER   | PPP Holds? | Currency Valuation | Expected RER Movement |
+|----------------|------------------|------------------------|---------------------|-------|-------------|----------------------|------------------------|
+| Brazil         | 4.07             | 520                    | 127.76              | 1.487 | No          | Under-valued         | Appreciation           |
+| India          | 68.51            | 12,000                 | 175.16              | 1.085 | No          | Under-valued         | Appreciation           |
+| Mexico         | 18.89            | 1,800                  | 95.29               | 1.994 | No          | Under-valued         | Appreciation           |
+| South Africa   | 15.78            | 800                    | 50.70               | 3.748 | No          | Under-valued         | Appreciation           |
+| Zimbabwe       | 101,347.00       | 4,000,000              | 39.47               | 4.814 | No          | Under-valued         | Appreciation           |
+
+
+- **Brazil:** The real exchange rate is 1.487, meaning goods are cheaper in Brazil than in the U.S. in real terms. The Brazilian real is **under-valued**, and we should expect **real appreciation** in the long run.
+  
+- **India:** With RER = 1.085, the rupee is slightly under-valued. PPP does not hold, so **real appreciation** is expected.
+
+- **Mexico:** A much lower basket cost in USD terms (95.29) implies significant under-valuation of the peso. RER = 1.994 suggests goods are much cheaper in Mexico, pointing to **expected real appreciation**.
+
+- **South Africa:** RER = 3.748 is quite high, indicating that the rand is substantially **under-valued**. Real appreciation is expected.
+
+- **Zimbabwe:** With RER = 4.814, the Zimbabwean dollar is heavily **under-valued**, suggesting significant room for **real appreciation** relative to the USD if markets move toward equilibrium.
+
+For all countries listed, PPP does **not** hold, and their currencies appear to be **under-valued** relative to the USD. Therefore, in the long run, we expect their real exchange rates to **appreciate**, aligning with the theory of purchasing power parity.
+
+
+# Problem 7: Real Exchange Rate and Inflation Expectations
+
+**Given:**
+
+- Current nominal exchange rate: **$1.5/£**
+
+- U.S. basket price: **$100**
+
+- Same basket in U.K.: **£120**
+
+- U.S. inflation (π_US): **2%**
+
+- U.K. inflation (π_UK): **3%**
+
+- Speed of convergence to PPP: **15% per year**
+
+## Problem 7(a) What is the expected U.S. minus U.K. inflation differential?
+
+\[
+\pi_{\text{US}} - \pi_{\text{UK}} = 2\% - 3\% = -1\%
+\]
+
+**Answer:** **–1%** (i.e., U.K. inflation is higher by 1%).
+
+
+## Problem 7(b) What is the current U.S. real exchange rate \( q_{\text{US/UK}} \) with the U.K.?
+
+Real exchange rate formula:
+\[
+q = \frac{E \cdot P_{UK}}{P_{US}} = \frac{1.5 \cdot 120}{100} = 1.8
+\]
+
+**Answer:** The current real exchange rate is **1.8**.
+
+
+## Problem 7(c) How much is the dollar overvalued/undervalued?
+
+If \( q > 1 \), the dollar is **overvalued**.
+
+\[
+\% \text{overvaluation} = (q - 1) \times 100 = (1.8 - 1) \times 100 = 80\%
+\]
+
+**Answer:** The dollar is **overvalued by 80%** relative to the pound.
+
+
+## Problem 7(d) What will be the real exchange rate in one year?
+
+Real exchange rate converges toward 1 (PPP level) by 15% per year:
+
+\[
+q_{t+1} = q_t - \lambda (q_t - 1) = 1.8 - 0.15(1.8 - 1) = 1.8 - 0.15(0.8) = 1.68
+\]
+
+**Answer:** Real exchange rate in one year is expected to be **1.68**
+
+## Problem 7(e) What is the expected rate of real depreciation for the U.S.?
+
+\[
+\text{Rate of real depreciation} = \frac{q_{t+1} - q_t}{q_t} = \frac{1.68 - 1.8}{1.8} = -0.0667 = -6.67\%
+\]
+
+**Answer:** **–6.67%** (i.e., the U.S. dollar is expected to **appreciate in real terms**)
+
+
+## Problem 7(f) What is the expected rate of **nominal depreciation** for the U.S.?
+
+\[
+\text{Nominal depreciation} = \text{real depreciation} + \text{inflation differential} \\
+= (-6.67\%) + (-1\%) = -7.67\%
+\]
+
+**Answer:** **–7.67%** (i.e., the nominal value of the dollar is expected to **appreciate**)
+
+
+## Problem 7(g) What do you predict will be the **dollar price of one pound** in one year?
+
+Current nominal exchange rate: \( E = 1.5 \)  
+Nominal depreciation rate = –7.67%  
+\[
+E_{t+1} = E_t \cdot (1 + \text{depreciation}) = 1.5 \cdot (1 - 0.0767) \approx 1.385
+\]
+
+**Answer:** The expected exchange rate in one year is **$1.385/£**
+
+
+**Summary of Answers**
+
+| Question | Answer |
+|----------|--------|
+| 7(a) | –1% inflation differential |
+| 7(b) | Real exchange rate = 1.8 |
+| 7(c) | Dollar is 80% overvalued |
+| 7(d) | Expected real exchange rate = 1.68 |
+| 7(e) | Real depreciation rate = –6.67% |
+| 7(f) | Nominal depreciation rate = –7.67% |
+| 7(g) | Expected exchange rate in one year = **$1.385/£** |
+
+
+# Problem 8: Simple Monetary Model – Korea and Japan (1996)
+
+**Given:**
+
+- **Japan**:
+  - Output growth \( g_J = 1\% \)
+  - Money growth \( \mu_J = 2\% \)
+
+- **South Korea**:
+  - Output growth \( g_K = 6\% \)
+  - Money growth \( \mu_K = 15\% \)
+
+According to the **Simple Monetary Model** with constant velocity:
+
+\[
+\pi = \mu - g
+\]
+
+Where:
+- \( \pi \): inflation
+- \( \mu \): money growth rate
+- \( g \): output growth rate
+
+
+## Problem 8(a) What is the inflation rate in South Korea? In Japan?
+
+Using \( \pi = \mu - g \):
+
+- **Korea:**  
+  \[
+  \pi_K = 15\% - 6\% = 9\%
+  \]
+
+- **Japan:**  
+  \[
+  \pi_J = 2\% - 1\% = 1\%
+  \]
+
+**Answer:**  
+- South Korea inflation = **9%**  
+- Japan inflation = **1%**
+
+
+## Problem 8(b) Expected depreciation rate of the Korean won relative to the Japanese yen?
+
+According to **Purchasing Power Parity (PPP)**:
+
+\[
+\text{Depreciation of won} = \pi_K - \pi_J = 9\% - 1\% = 8\%
+\]
+
+**Answer:**  
+Expected depreciation of the won = **8%**
+
+
+## Problem 8(c) New Korean inflation rate if money growth drops to 12%?
+
+\[
+\pi_K^{\text{new}} = 12\% - 6\% = 6\%
+\]
+
+**Answer:**  
+New Korean inflation rate = **6%**
+
+
+## Problem 8(d) Time series diagram interpretation
+
+If the Bank of Korea **increases** money growth (e.g., from 12% to 15% again), the following happens over time:
+
+| Variable       | Effect over time |
+|----------------|------------------|
+| \( M_K \) (Money supply) | Increases more rapidly |
+| \( i_K \) (Nominal interest rate) | Rises |
+| \( P_K \) (Price level) | Increases (faster inflation) |
+| Real money balances \( M_K/P_K \) | Eventually return to previous level (short-run dip) |
+| Exchange rate \( E_{\text{won}/¥} \) | Depreciates over time |
+
+**Diagram axes (for all plots):**  
+- **x-axis**: Time  
+- **y-axis**: Variable level
+
+Each plot would show a shift in trend or kink in the trajectory of each variable starting at the policy change point (e.g., t₀).
+
+
+## Problem 8(e) What money growth rate is needed to maintain a fixed exchange rate (peg)?
+
+For a **fixed exchange rate**, monetary model implies:
+
+\[
+\pi_K = \pi_J \Rightarrow \mu_K - g_K = \mu_J - g_J
+\]
+
+Solve for \( \mu_K \):
+
+\[
+\mu_K = \mu_J - g_J + g_K = 2\% - 1\% + 6\% = 7\%
+\]
+
+**Answer:**  
+Bank of Korea must adopt a money growth rate of **7%** to keep the won/yen exchange rate fixed.
+
+
+## Problem 8(f) What money growth rates would cause the Korean won to appreciate?
+
+For the **won to appreciate**, we need:
+
+\[
+\pi_K < \pi_J \Rightarrow \mu_K - g_K < \mu_J - g_J
+\Rightarrow \mu_K < \mu_J - g_J + g_K = 7\%
+\]
+
+**Answer:**  
+To appreciate the won, Korea’s money growth rate must be **less than 7%**
+
+That is:
+\[
+\boxed{0\% < \mu_K < 7\%}
+\]
+
+
+**Summary of Answers**
+
+| Question | Answer |
+|----------|--------|
+| (a) | Korea: 9%, Japan: 1% inflation |
+| (b) | Won expected to depreciate by 8% |
+| (c) | New Korea inflation = 6% |
+| (d) | Increase in money growth → ↑ \( M_K \), ↑ \( i_K \), ↑ \( P_K \), ↓ real money balances, ↑ exchange rate \( E_{\text{won}/¥} \) |
+| (e) | To fix exchange rate, \( \mu_K = 7\% \) |
+| (f) | For appreciation, \( 0\% < \mu_K < 7\% \) |
+
+
+# Problem 9: General Monetary Model – Korea and Japan
+
+We now use the **general monetary model**, where **money demand depends inversely on the nominal interest rate**. All assumptions from **Problem 8** still hold, with the additional information:
+
+- Interest rate in Japan: \( i_{¥} = 3\% \)
+- Initial Korean money growth rate: \( \mu_K = 15\% \), output growth = 6%
+- Inflation in Korea (from Problem 8): \( \pi_K = 9\% \)
+- Inflation in Japan: \( \pi_J = 1\% \)
+
+## Problem 9(a) What is the interest rate paid on South Korean deposits?
+
+We use the **Fisher equation**:
+
+\[
+i = r + \pi
+\]
+
+Assuming **real interest rates are equal** (initially), and using \( r = i_J - \pi_J = 3\% - 1\% = 2\% \), then:
+
+\[
+i_K = r + \pi_K = 2\% + 9\% = 11\%
+\]
+
+**Answer:** The Korean nominal interest rate is **11%**
+
+## Problem 9(b) Show that real interest rates are equal in Japan and South Korea
+
+Using:
+
+\[
+r = i - \pi
+\]
+
+- Japan: \( r_J = 3\% - 1\% = 2\% \)
+- Korea: \( r_K = 11\% - 9\% = 2\% \)
+
+The **real interest rates are equal** across countries, consistent with capital mobility and uncovered interest parity.
+
+## Problem 9(c) What happens to the Korean interest rate if money growth falls to 12%?
+
+If money growth drops from 15% to 12%, and inflation drops one-for-one (output growth unchanged at 6%):
+
+\[
+\pi_K^{\text{new}} = 12\% - 6\% = 6\%
+\]
+
+Real interest rate remains **unchanged** at 2%, so:
+
+\[
+i_K^{\text{new}} = r + \pi_K^{\text{new}} = 2\% + 6\% = 8\%
+\]
+
+**Answer:**  
+
+Nominal interest rate in Korea **falls from 11% to 8%**
+
+## Problem 9(d) Time series diagrams: Effect of lower money growth
+
+If the Bank of Korea reduces money growth from 15% → 12%, we expect the following over time:
+
+| Variable       | Time Path Description |
+|----------------|------------------------|
+| \( M_K \) (Money supply) | Growth slows down |
+| \( i_K \) (Interest rate) | Falls from 11% → 8% |
+| \( P_K \) (Price level) | Inflation slows (lower slope) |
+| \( M_K / P_K \) (Real money balances) | Rises (lower inflation + lower interest rate) increases money demand |
+| \( E_{\text{won}/¥} \) | Depreciation slows; possibly temporary appreciation |
+
+**Graph behavior:**
+- All variables plotted with **time on x-axis**
+- Inflection or kink occurs at the policy change point (e.g., time t₀)
+
+**Key Point:**  
+Lower money growth leads to **disinflation**, lower interest rates, and **higher real money balances**. Nominal depreciation of the won slows (or reverses), possibly leading to **short-run appreciation**.
+
+**Summary of Answers**
+
+| Question | Answer |
+|----------|--------|
+| (a) | \( i_K = 11\% \) |
+| (b) | \( r_J = r_K = 2\% \) |
+| (c) | New \( i_K = 8\% \) after disinflation |
+| (d) | ↓ \( M_K \) growth, ↓ \( i_K \), ↓ inflation, ↑ real balances, slower depreciation (or appreciation) |
+
+# Problem 10: U.S. Money Supply and Exchange Rate Dynamics
+
+We analyze the effects of a **temporary increase in the U.S. money supply** on the **money market** and **foreign exchange market** between the **U.S. dollar ($)** and the **British pound (£)**. The exchange rate is defined as \( E_{\$/£} \): the number of dollars per pound.
+
+We use time series diagrams to track the impact over time and mark the initial equilibrium as point **A**, the **short-run adjustment** as point **B**, and the **long-run outcome** as point **C**.
+
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+time <- 1:10
+policy_shock_time <- 5
+
+# ===== Create time series for each variable =====
+df <- data.frame(
+  time = time,
+  M = c(rep(100, policy_shock_time - 1), seq(110, 130, length.out = length(time) - policy_shock_time + 1)),
+  P = c(rep(100, policy_shock_time - 1), seq(100, 130, length.out = length(time) - policy_shock_time + 1)),
+  i = c(rep(5, policy_shock_time - 1), 4, 4.5, 4.8, 5, 5, 5),
+  E = c(rep(1.5, policy_shock_time - 1), 1.65, 1.7, 1.75, 1.8, 1.8, 1.8)
+)
+
+df$M_over_P <- df$M / df$P
+
+# ===== Convert to long format for plotting =====
+df_long <- df %>%
+  pivot_longer(cols = -time, names_to = "variable", values_to = "value")
+
+# ===== Plot each variable over time =====
+plot_list <- lapply(unique(df_long$variable), function(var) {
+  ggplot(df_long %>% filter(variable == var), aes(x = time, y = value)) +
+    geom_line(size = 1.2, color = "blue") +
+    geom_vline(xintercept = policy_shock_time, linetype = "dashed", color = "red") +
+    labs(title = paste("Time Path of", var),
+         x = "Time",
+         y = var) +
+    theme_minimal()
+})
+
+# ===== Display all plots one by one =====
+print(plot_list[[1]])  # M (money supply)
+print(plot_list[[2]])  # P (price level)
+print(plot_list[[3]])  # i (interest rate)
+print(plot_list[[4]])  # E ($/£)
+print(plot_list[[5]])  # M/P (real money balances)
+
+```
+
+**Diagram Summary:**
+My time series plots illustrate:
+
+- **M (Money Supply):** increases at time t = 5
+
+- **i (Interest Rate):** falls temporarily, then recovers
+
+- **P (Price Level):** rises after the lag
+
+- **M/P (Real Money Balances):** initially increases, then falls back
+
+- **E ($/£):** dollar depreciates in both short run and long run
+
+## Problem 10(a) Diagram Interpretation: Temporary Increase in U.S. Money Supply
+
+- **Money Market:**  
+  The increase in \( M \) shifts the money supply rightward. With sticky prices in the short run, the real money supply \( M/P \) rises, leading to a **drop in U.S. interest rates**. This is reflected as a movement from point A to point B.
+
+- **FX Market:**  
+  The lower U.S. interest rate makes U.S. assets less attractive. Capital outflows occur, causing the dollar to **depreciate** and \( E_{\$/£} \) to **increase**.  
+  In the long run, prices \( P \) adjust upward, reducing real money balances and returning interest rates to their initial level. The exchange rate depreciates **further**, reaching point C.
+
+- **Real Money Balances \( M/P \):**  
+  Initially rise due to unchanged prices and higher \( M \), then fall as prices catch up, returning to the original level.
+
+## Problem 10(b) Short-run Effects (Point B compared to A):
+
+| Variable                     | Change        | Explanation |
+|-----------------------------|---------------|-------------|
+| U.S. interest rate \( i_{\$} \)     | **↓** | Liquidity increases, interest rate falls |
+| British interest rate \( i_{£} \)   | **No change** | No policy change in the U.K. |
+| Exchange rate \( E_{\$/£} \)        | **↑** (depreciation) | Dollar weakens relative to the pound |
+| Expected exchange rate \( E^e_{\$/£} \) | **No change** | Short-run expectations unchanged |
+| U.S. price level \( P \)            | **No change** | Prices are sticky in the short run |
+
+
+## Problem 10(c) Long-run Effects (Point C compared to A):
+
+| Variable                     | Change        | Explanation |
+|-----------------------------|---------------|-------------|
+| U.S. interest rate \( i_{\$} \)     | **No change** | Returns to initial level as \( M/P \) normalizes |
+| British interest rate \( i_{£} \)   | **No change** | Still no change in U.K. policy |
+| Exchange rate \( E_{\$/£} \)        | **↑** | Dollar permanently depreciates due to higher \( M \) and \( P \) |
+| Expected exchange rate \( E^e_{\$/£} \) | **↑** | Increases to match new expected future rate |
+| U.S. price level \( P \)            | **↑** | Adjusts upward due to excess demand for goods |
+
+A **temporary increase in the U.S. money supply** results in:
+
+- **Short-run:** lower interest rates and dollar depreciation (movement to point B)
+- **Long-run:** higher price level, real money balances return to normal, and permanent dollar depreciation (point C)
+
+This behavior is consistent with standard monetary models and PPP adjustment over time.
+
+
+# Problem 11: Impact of a Permanent Decrease in India's Money Supply
+
+We analyze the effects of a **permanent decrease in India’s nominal money supply (M_IN)** on:
+
+- The **money market** (interest rates, real balances)
+- The **foreign exchange market** (exchange rate \( E_{\text{Rs}/\$} \))
+- The **price level** in India \( P_{\text{IN}} \)
+
+The exchange rate is defined as **rupees per dollar (Rs/$)** — i.e., **an increase in \( E_{\text{Rs}/\$} \)** means **rupee depreciation**, and a decrease means **rupee appreciation**.
+
+## Problem 11(a) Diagram Analysis: Money and FX Markets
+
+**Money Market:**
+
+- A **permanent decrease** in the Indian money supply shifts the nominal money supply curve **left**.
+- In the **short run**, prices are sticky ⇒ real money balances \( M/P \) fall ⇒ interest rate in India **rises**.
+- Higher interest rates make Indian assets more attractive.
+
+**FX Market:**
+
+- Higher Indian interest rates lead to **capital inflows**.
+- The rupee **appreciates sharply** in the short run (point B).
+- In the **long run**, the domestic price level \( P \) decreases in proportion to the fall in \( M \).
+- Real balances \( M/P \) normalize, and interest rates return to original levels (point C).
+- The exchange rate settles at a **permanently appreciated level**.
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+time <- 1:10
+policy_shock_time <- 5
+
+df <- data.frame(
+  time = time,
+  
+  M_IN = c(rep(100, policy_shock_time - 1), rep(90, length(time) - policy_shock_time + 1)),
+  P_IN = c(rep(100, policy_shock_time), seq(98, 90, length.out = length(time) - policy_shock_time)),
+  
+  i_Rs = c(rep(5, policy_shock_time - 1), 7, 6.5, 6, 5.5, 5, 5),
+  E_Rs_USD = c(rep(75, policy_shock_time - 1), 70, 71, 72, 73, 74, 74)
+)
+
+df$M_over_P <- df$M_IN / df$P_IN
+df_long <- df %>%
+  pivot_longer(cols = -time, names_to = "variable", values_to = "value")
+
+plot_list <- lapply(unique(df_long$variable), function(var) {
+  ggplot(df_long %>% filter(variable == var), aes(x = time, y = value)) +
+    geom_line(size = 1.2, color = "blue") +
+    geom_vline(xintercept = policy_shock_time, linetype = "dashed", color = "red") +
+    labs(title = paste("Time Path of", var),
+         x = "Time",
+         y = var) +
+    theme_minimal()
+})
+
+for (p in plot_list) {
+  print(p)
+}
+
+```
+
+## Problem 11(b) Time Path of Variables (India)
+
+On a chart with **time on the x-axis**, we expect the following:
+
+| Variable         | Time Path Description |
+|------------------|------------------------|
+| \( M_{IN} \)     | Drops permanently at t = A |
+| \( P_{IN} \)     | Sticky in short run, slowly declines |
+| \( M/P \)        | Falls sharply (short run), then gradually rises as \( P \) adjusts |
+| \( i_{Rs} \)     | Jumps up (short run), then returns to initial level |
+| \( E_{\text{Rs}/\$} \) | Overshoots downward (strong rupee appreciation), then stabilizes at a lower level |
+
+## Problem 11(c) Short-Run Effects (Point B vs Point A)
+
+| Variable             | Change     | Explanation |
+|----------------------|------------|-------------|
+| \( i_{Rs} \)         | **↑**      | Money supply ↓ ⇒ liquidity tightens ⇒ rates ↑ |
+| \( E_{\text{Rs}/\$} \) | **↓** (rupee appreciates) | Higher interest rate attracts capital |
+| \( E^e_{\text{Rs}/\$} \) | **No change** | Expected future exchange rate unchanged in short run |
+| \( P_{IN} \)         | **No change** | Prices are sticky in the short run |
+
+## Problem 11(d) Long-Run Effects (Point C vs Point A)
+
+| Variable             | Change         | Explanation |
+|----------------------|----------------|-------------|
+| \( i_{Rs} \)         | **No change**  | Real balances return to equilibrium, so interest rate normalizes |
+| \( E_{\text{Rs}/\$} \) | **↓** (permanent rupee appreciation) | Price level adjusts downward ⇒ stronger real currency |
+| \( E^e_{\text{Rs}/\$} \) | **↓** | Long-run expectations adjust to new exchange rate |
+| \( P_{IN} \)         | **↓** | Falls to match reduced money supply |
+
+## Problem 11(e) Overshooting: Theory & Practice
+
+**In theory:**
+
+- According to **Dornbusch’s overshooting model**, exchange rates respond **more than proportionally** in the short run to monetary shocks due to sticky prices and fast-moving asset markets.
+- In this case, the **rupee appreciates more than it does in the long run**, and then **partially reverses** as prices adjust downward.
+- This is the **overshooting** effect: short-run exchange rate movement **exceeds** its new long-run level.
+
+**In practice:**
+
+- Financial markets react immediately to news (e.g., central bank policy).
+- Goods markets adjust slowly ⇒ real variables overshoot and stabilize.
+- Overshooting can lead to volatility and speculative flows before convergence.
+
+**Conclusion:**
+
+A **permanent decrease in India's money supply** leads to:
+
+- **Short-run appreciation** of the rupee and **rise in interest rates**.
+- **Long-run price level decline**, return of real balances and interest rates to original levels.
+- **Permanent nominal appreciation** of the rupee.
+- **Overshooting**: exchange rate appreciates *more* in the short run than in the long run.
+
+# Problem 12: Is Overshooting Consistent with Purchasing Power Parity?
+
+**Question:**
+Is **overshooting** — both in theory and in practice — consistent with **Purchasing Power Parity (PPP)**?  
+What are the roles of PPP in the short run vs. long run, and how do assumptions in the asset approach affect this?  
+How does overshooting help explain empirical exchange rate behavior?
+
+**Overshooting and PPP: Are They Consistent?**
+
+**Yes — overshooting is consistent with PPP, but only in the long run.**
+
+- **PPP** (Purchasing Power Parity) posits that in the **long run**, exchange rates adjust to equalize the prices of identical goods across countries:
+  
+  \[
+  E = \frac{P_{\text{home}}}{P_{\text{foreign}}}
+  \]
+
+- **Overshooting**, as developed in **Dornbusch’s model**, refers to the phenomenon where the exchange rate responds **more than proportionally** in the **short run** to a monetary shock due to:
+  - **Sticky prices** (goods markets adjust slowly)
+  - **Flexible financial markets** (interest rates and capital flows adjust quickly)
+
+Thus, overshooting describes **how the exchange rate moves in the short run** before converging to the level consistent with PPP.
+
+```{r, echo=FALSE}
+library(ggplot2)
+time <- 1:20
+ppp_level <- 1.5
+
+E <- c(
+  rep(ppp_level, 4),
+  2.0,   
+  1.85, 1.75, 1.65, 1.58, 1.53, 1.51, 1.5, rep(ppp_level, 8)
+)
+
+df <- data.frame(time = time, E = E)
+points_df <- data.frame(
+  time = c(4, 5, 12),
+  E = c(ppp_level, 2.0, ppp_level),
+  label = c("A (Initial)", "B (Overshoot)", "C (PPP)")
+)
+
+ggplot(df, aes(x = time, y = E)) +
+  geom_line(size = 1.2, color = "blue") +
+  geom_hline(yintercept = ppp_level, linetype = "dashed", color = "gray40") +
+  geom_point(data = points_df, aes(x = time, y = E), color = "red", size = 3) +
+  geom_text(data = points_df, aes(label = label), vjust = -1, color = "red") +
+  labs(
+    title = "Overshooting and Return to PPP",
+    x = "Time",
+    y = "Exchange Rate (E $/£)"
+  ) +
+  theme_minimal()
+
+```
+
+**PP in the Short Run vs. Long Run**
+
+| Term        | Short Run                       | Long Run                          |
+|-------------|----------------------------------|------------------------------------|
+| **PPP validity** | Often **violated** due to sticky prices, transaction costs, and non-tradables | More likely to hold as prices adjust |
+| **Usefulness**   | Not a good predictor of short-run exchange rate | Useful anchor for long-term expectations |
+| **Role**         | Not binding; relative prices don’t adjust instantly | Acts as long-run equilibrium condition |
+
+
+**Asset Market Approach: Assumptions**
+
+- In the **short run**, the asset approach assumes:
+  - **Capital mobility**
+  - Investors reallocate portfolios based on **interest differentials and expectations**
+  - Prices are **sticky**
+- In the **long run**:
+  - Prices are flexible
+  - Real money balances return to normal
+  - PPP is restored
+
+Overshooting emerges **because** these asset markets respond quickly while goods prices do not.
+
+**How Overshooting Explains Exchange Rate Behavior**
+
+**Empirical facts:**
+- Exchange rates are **highly volatile** in the short run
+- They often **overreact** to news (e.g., monetary policy)
+- Long-run exchange rate paths tend to **revert toward PPP levels**
+
+**Overshooting explains this by showing:**
+- Immediate overreaction to monetary shocks due to rapid capital flows
+- Slow correction over time as price levels catch up
+- Why real exchange rates can deviate from 1 for long periods
+
+**Conclusion**
+
+- **Overshooting is consistent with PPP in the long run**, though PPP does **not hold in the short run**.
+- It helps reconcile **short-term volatility** in exchange rates with **long-run equilibrium theories**.
+- PPP remains a **long-run anchor**, while overshooting explains **short-run deviations** driven by interest rates and expectations.
+
+# Problem 13: Effect of Reduced U.S. Real Money Demand
+
+We examine the effects of a **decline in real money demand in the U.S.**, using **money market** and **foreign exchange (FX)** diagrams. The exchange rate is expressed as **dollars per euro \( E_{\$/€} \)** — an increase in \( E \) implies a **depreciation of the U.S. dollar**.
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+time <- 1:20
+shock_time <- 5
+M_US <- 100
+
+df <- data.frame(
+  time = time,
+
+  P_US = c(rep(100, shock_time), seq(102, 130, length.out = length(time) - shock_time)),
+
+  i_US = c(rep(5, shock_time), 4.5, 4.8, 5, rep(5, length(time) - shock_time - 3)),
+  E_US_EUR = c(rep(1.2, shock_time), 1.4, 1.35, 1.3, 1.28, 1.25, rep(1.25, length(time) - shock_time - 5))
+)
+df$M_US <- M_US
+
+df$M_over_P <- df$M_US / df$P_US
+
+df_long <- df %>%
+  pivot_longer(cols = -time, names_to = "variable", values_to = "value")
+
+plot_list <- lapply(unique(df_long$variable), function(var) {
+  ggplot(df_long %>% filter(variable == var), aes(x = time, y = value)) +
+    geom_line(size = 1.2, color = "blue") +
+    geom_vline(xintercept = shock_time, linetype = "dashed", color = "red") +
+    labs(title = paste("Time Path of", var),
+         x = "Time",
+         y = var) +
+    theme_minimal()
+})
+
+for (p in plot_list) {
+  print(p)
+}
+
+```
+
+## Problem 13(a) Temporary Decrease in U.S. Real Money Demand
+
+**Short-run effect (Point B):**
+
+- **Money market:**  
+  A decline in real money demand shifts the **money demand curve left**, leading to a **temporary excess supply** of money at initial interest rates.
+  - Result: **U.S. interest rates fall**
+
+- **FX market:**
+  - Lower \( i_{\$} \) makes dollar assets less attractive → capital outflows
+  - Dollar **depreciates** → \( E_{\$/€} \) **rises**
+
+**Long-run effect (Point C):**
+
+- Because the shock is **temporary**, real money demand returns to original level
+- Interest rates return to normal
+- Exchange rate returns to initial value
+- Prices remain **unchanged**
+
+**Summary (temporary):**
+- **Short run:** \( i_{\$} \downarrow \), \( E_{\$/€} \uparrow \)
+- **Long run:** all variables return to **initial equilibrium**
+
+
+## Problem 13(b) Permanent Decrease in U.S. Real Money Demand
+
+This case leads to **permanent adjustments**, including the **price level**:
+
+**Short-run effect (Point B):**
+
+- Similar to temporary case:
+  - \( i_{\$} \downarrow \)
+  - \( E_{\$/€} \uparrow \) (dollar depreciates)
+  - **Overshooting**: exchange rate rises **more than long-run value**
+
+**Long-run effect (Point C):**
+
+- Real money demand is permanently lower
+- With fixed nominal money supply \( M_{\$} \), this implies:
+  - **Price level must rise** to lower \( M/P \) and re-establish equilibrium
+  - Interest rate \( i_{\$} \) returns to initial value
+  - Exchange rate remains **permanently higher** (weaker dollar)
+
+**Summary (permanent):**
+- **Short run:** \( i_{\$} \downarrow \), \( E_{\$/€} \uparrow \uparrow \) (overshooting)
+- **Long run:** \( P_{\$} \uparrow \), \( E_{\$/€} \uparrow \), \( i_{\$} \rightarrow \text{initial} \)
+
+
+## Problem 13(c) Time Path of Key Variables (Permanent Shock)
+
+| Variable             | Short-Run Behavior | Long-Run Behavior | Explanation |
+|----------------------|--------------------|-------------------|-------------|
+| Nominal money supply \( M_{\$} \) | No change           | No change        | Assumed constant |
+| Price level \( P_{\$} \)         | Sticky              | **Increases**     | Adjusts to lower real money demand |
+| Real money balances \( M/P \)    | **Excess**          | Returns to lower equilibrium | Price rise absorbs money supply |
+| Interest rate \( i_{\$} \)       | **Falls**           | Returns to original | Real balances normalize |
+| Exchange rate \( E_{\$/€} \)     | **Overshoots up**   | Settles higher     | Dollar depreciates short- and long-term |
+
+
+- A **temporary fall** in real money demand causes a **short-run depreciation** of the dollar, but no long-run effect.
+- A **permanent fall** causes:
+  - Short-run **overshooting** (due to sticky prices)
+  - Long-run **higher price level** and **permanent dollar depreciation**
+  - Interest rates return to equilibrium only after price adjustment
+
+
+# Problem 14: Monetary Policy and the FX Market — South Korea & Japan
+
+**Exchange rate definition:**  
+\[
+E_{\text{won}/¥} = \text{South Korean won per Japanese yen}
+\]
+→ An **increase** in \( E_{\text{won}/¥} \) means the **Korean won depreciates** relative to the yen.
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(patchwork)
+
+time <- 1:20
+shock_time <- 5
+M_KR <- 100  
+
+# ========== Scenario A ==========
+scenario_a <- data.frame(
+  time = time,
+  scenario = "A (Expected Policy)",
+  P_KR = c(rep(100, shock_time), seq(102, 130, length.out = 20 - shock_time)),
+  i_KR = c(rep(5, shock_time), 4.5, 4.8, 5, rep(5, 20 - shock_time - 3)),
+  E_won_yen = c(rep(10, shock_time), 11, 11.2, 11.5, rep(11.5, 20 - shock_time - 3))
+)
+
+# ========== Scenario B ==========
+scenario_b <- data.frame(
+  time = time,
+  scenario = "B (Announced Only)",
+  P_KR = rep(100, 20),
+  i_KR = rep(5, 20),
+  E_won_yen = c(rep(10, shock_time), 11, 11.2, rep(11.2, 20 - shock_time - 2))
+)
+
+# ========== Scenario C ==========
+scenario_c <- data.frame(
+  time = time,
+  scenario = "C (Surprise Policy)",
+  P_KR = c(rep(100, shock_time), seq(103, 130, length.out = 20 - shock_time)),
+  i_KR = c(rep(5, shock_time - 1), 3.5, 4, 4.5, 5, rep(5, 20 - shock_time - 3)),
+  E_won_yen = c(rep(10, shock_time - 1), 12.5, 12.0, 11.5, 11.2, rep(11.2, 20 - shock_time - 3))
+)
+
+all_data <- bind_rows(scenario_a, scenario_b, scenario_c)
+all_data <- all_data %>%
+  group_by(scenario) %>%
+  mutate(M_KR = M_KR,
+         M_over_P = M_KR / P_KR)
+long_df <- all_data %>%
+  pivot_longer(cols = c(P_KR, i_KR, E_won_yen, M_over_P),
+               names_to = "variable",
+               values_to = "value")
+
+plot_variable_by_scenario <- function(var_name) {
+  ggplot(filter(long_df, variable == var_name), aes(x = time, y = value, color = scenario)) +
+    geom_line(size = 1.2) +
+    geom_vline(xintercept = shock_time, linetype = "dashed", color = "black") +
+    labs(title = paste("Time Path of", var_name),
+         x = "Time",
+         y = var_name) +
+    theme_minimal() +
+    theme(legend.position = "bottom")
+}
+
+p1 <- plot_variable_by_scenario("i_KR")
+p2 <- plot_variable_by_scenario("E_won_yen")
+p3 <- plot_variable_by_scenario("P_KR")
+p4 <- plot_variable_by_scenario("M_over_P")
+
+p1
+p2
+p3
+p4
+
+```
+
+
+## Problem 14(a) Permanent Increase in Korean Money Supply
+
+**Short-run (Point B):**
+
+- **Money Market:**
+  - Bank of Korea increases nominal money supply → real money balances rise (prices sticky)
+  - **Korean interest rate falls** due to increased liquidity
+- **FX Market:**
+  - Lower interest rate in Korea → capital outflows
+  - **Won depreciates** → \( E_{\text{won}/¥} \) increases
+
+**Long-run (Point C):**
+
+- Prices in Korea **rise**, reducing real money balances back to original
+- **Interest rate returns** to original level
+- Exchange rate remains **permanently higher** (permanent depreciation of won)
+
+**Result:**
+- Short-run: won depreciates → Point B  
+- Long-run: higher price level and continued depreciation → Point C
+
+## Problem 14(b) Announced but Unimplemented Policy (Believed by Investors)
+
+- Investors **expect future money growth** → they expect future **inflation and depreciation**
+- Even though the policy isn't implemented, the **expected exchange rate \( E^e \)** rises
+- According to **Uncovered Interest Parity (UIP)**:
+  \[
+  i_{\text{KR}} \approx i_{\text{JP}} + \frac{E^e - E}{E}
+  \]
+  To satisfy UIP, the **current exchange rate \( E_{\text{won}/¥} \)** must **increase immediately**
+- Interest rates don’t change (no actual monetary action)
+- The **won depreciates in the short run due to expectations**
+
+## Problem 14(c) Unanticipated Permanent Increase in Money Supply
+
+- The policy is **not expected**, so markets don’t price it in beforehand
+- Once implemented:
+  - **Interest rate drops**
+  - **Won depreciates suddenly**
+  - Since there was no advance warning, **overshooting** occurs:
+    - The exchange rate moves **more than its long-run value**
+    - Then adjusts back upward as prices rise
+
+
+## Problem 14(d) Evaluating the Statements
+
+### 1. *If a country wants to decrease the value of its currency, it can do so (temporarily) without raising domestic interest rates.*
+
+**True**  
+A country can **decrease interest rates** via monetary expansion, which **depreciates its currency** temporarily in the short run.
+
+### 2. *The central bank can increase both the domestic price level and the value of its currency in the long run.*
+
+**False**  
+In the long run, increasing the money supply **raises the domestic price level** and leads to **currency depreciation**, not appreciation.
+
+### 3. *The most effective way to decrease the value of a currency is through surprising investors.*
+
+**True**  
+**Unanticipated policy** causes **exchange rate overshooting** → sudden, larger depreciation.  
+Surprises have stronger short-run effects than expected or announced changes.
+
+**Summary of Answers**
+
+| Scenario                                    | FX Market Effect                       |
+|---------------------------------------------|----------------------------------------|
+| (a) Permanent M↑ (expected)                 | Short-run depreciation, long-run price ↑, continued depreciation |
+| (b) Announced M↑ (not implemented)          | Short-run depreciation due to expectations |
+| (c) Surprise permanent M↑                   | Sudden sharp depreciation (overshooting) |
+
+
+
+
+
+
+
+
+
