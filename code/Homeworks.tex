@@ -1,0 +1,508 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Homeworks},
+  pdfauthor={Iushin Nikolai},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Homeworks}
+\author{Iushin Nikolai}
+\date{2025-04-27}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\section{Homework 2}\label{homework-2}
+
+\subsection{Q1. CES Utility}\label{q1.-ces-utility}
+
+\textbf{Given}\\
+\[
+u = \Bigl(\gamma\,y_{1}^{\frac{\sigma-1}{\sigma}} + y_{2}^{\frac{\sigma-1}{\sigma}}\Bigr)^{\frac{\sigma}{\sigma-1}},
+\qquad
+\text{budget: }p_{1}y_{1} + p_{2}y_{2} = I.
+\]
+
+\textbf{Find} the ratio \(y_{1}/y_{2}\) that maximizes \(u\).
+
+\textbf{Solution}\\
+1. Define the intermediate function\\
+\[
+   V = \gamma\,y_{1}^{\frac{\sigma-1}{\sigma}} + y_{2}^{\frac{\sigma-1}{\sigma}}
+   \] and set up the Lagrangian\\
+\[
+   \mathcal{L} = V + \lambda\,(I - p_{1}y_{1} - p_{2}y_{2}).
+   \] 2. First‐order conditions:\\
+\[
+   \frac{\partial\mathcal{L}}{\partial y_{1}}
+   = \gamma\,\frac{\sigma-1}{\sigma}\,y_{1}^{\frac{\sigma-1}{\sigma}-1} - \lambda\,p_{1} = 0,
+   \quad
+   \frac{\partial\mathcal{L}}{\partial y_{2}}
+   = \frac{\sigma-1}{\sigma}\,y_{2}^{\frac{\sigma-1}{\sigma}-1} - \lambda\,p_{2} = 0.
+   \] 3. Divide the two equations to eliminate \(\lambda\):\\
+\[
+   \frac{\gamma\,\frac{\sigma-1}{\sigma}\,y_{1}^{\frac{\sigma-1}{\sigma}-1}}{\frac{\sigma-1}{\sigma}\,y_{2}^{\frac{\sigma-1}{\sigma}-1}}
+   = \frac{p_{1}}{p_{2}}
+   \;\Longrightarrow\;
+   \gamma\,y_{1}^{-\tfrac{1}{\sigma}}\,p_{2}
+   = y_{2}^{-\tfrac{1}{\sigma}}\,p_{1}
+   \;\Longrightarrow\;
+   \Bigl(\frac{y_{1}}{y_{2}}\Bigr)^{\!\tfrac{1}{\sigma}}
+   = \frac{\gamma\,p_{2}}{p_{1}}.
+   \] 4. Therefore, the optimal ratio is\\
+\[
+   \boxed{
+     \frac{y_{1}}{y_{2}}
+     = \biggl(\gamma\,\frac{p_{2}}{p_{1}}\biggr)^{\!\sigma}
+   }.
+   \]
+
+\subsection{Q2. Cobb--Douglas in an Open
+Economy}\label{q2.-cobbdouglas-in-an-open-economy}
+
+\textbf{Given}\\
+\[
+U(y_{1},y_{2}) = y_{1}^{\alpha}\,y_{2}^{\beta},\quad \alpha + \beta = 1,
+\] endowment \((y_{1}^{e},y_{2}^{e})\), world prices \((p_{1},p_{2})\).
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Income} (value of endowment):\\
+  \[
+  I = p_{1}\,y_{1}^{e} + p_{2}\,y_{2}^{e}.
+  \]
+\item
+  \textbf{Budget constraint}\\
+  \[
+  p_{1}\,y_{1} + p_{2}\,y_{2} = I.
+  \]
+\item
+  \textbf{Maximization} yields standard expenditure shares:\\
+  \[
+  p_{1}\,y_{1} = \alpha\,I,
+  \quad
+  p_{2}\,y_{2} = \beta\,I.
+  \]
+\item
+  \textbf{Demand functions}:\\
+  \[
+  \boxed{
+    y_{1}^{*} = \frac{\alpha\,I}{p_{1}},
+    \quad
+    y_{2}^{*} = \frac{\beta\,I}{p_{2}}
+  }.
+  \]
+\item
+  Substituting \(I = p_{1}\,y_{1}^{e} + p_{2}\,y_{2}^{e}\) gives:\\
+  \[
+  y_{1}^{*}
+  = \alpha\Bigl(y_{1}^{e} + \tfrac{p_{2}}{p_{1}}\,y_{2}^{e}\Bigr),
+  \quad
+  y_{2}^{*}
+  = \beta\Bigl(\tfrac{p_{1}}{p_{2}}\,y_{1}^{e} + y_{2}^{e}\Bigr).
+  \]
+\end{enumerate}
+
+\section{Homework 3 -- Equivalence of the Two
+Equilibria}\label{homework-3-equivalence-of-the-two-equilibria}
+
+\textbf{Claim.} The home country's equilibrium under\\
+1. ``Separate free-trade'' (Situation 1) and\\
+2. ``Integrated world economy'' (Situation 2)
+
+coincide. In both cases the relative price \(p\) is the same, so home
+produces and consumes the same bundle.
+
+\subsection{Definitions}\label{definitions}
+
+\begin{itemize}
+\tightlist
+\item
+  Let\\
+  \[
+    RS_H(p) \;=\;\text{home’s relative‐supply of good 1 (units of 1 per 2) at price }p,
+  \] \[
+    RS_F(p) \;=\;\text{foreign’s relative‐supply of good 1 at price }p,
+  \] \[
+    RS_W(p)\;=\;RS_H(p)+RS_F(p)\quad\text{(world relative-supply).}
+  \]
+\item
+  Let \(RD(p)\) be world relative-demand (units of 1 per 2) at price
+  \(p\).
+\end{itemize}
+
+\subsection{Situation 1: Separate Free
+Trade}\label{situation-1-separate-free-trade}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{World price determination.}\\
+  Since both countries take the same world price \(p\) and supply goods
+  competitively, the \textbf{aggregate equilibrium} price \(p^*\) solves
+  \[
+  RS_W(p^*) \;=\; RD(p^*)\,.
+  \]
+\item
+  \textbf{Country‐specific outcome.}\\
+  At \(p^*\), home chooses its profit‐maximizing production point on its
+  PPF and its utility‐maximizing consumption on its indifference map.
+  Call this bundle \(\bigl(y_1^H,y_2^H\bigr)\).
+\end{enumerate}
+
+\subsection{Situation 2: Integrated World
+Economy}\label{situation-2-integrated-world-economy}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Aggregate economy.}\\
+  Treat home + foreign as one big country with relative‐supply\\
+  \[
+    RS_W(p)=RS_H(p)+RS_F(p).
+  \]
+\item
+  \textbf{World equilibrium.}\\
+  The integrated economy's equilibrium price \(\tilde p\) solves the
+  \textbf{same} equation \[
+  RS_W(\tilde p) \;=\; RD(\tilde p).
+  \]
+\item
+  \textbf{Specialization assumption.}\\
+  At \(\tilde p\) (between the two autarky prices), home fully
+  specializes in good 1 and foreign in good 2, but the determining
+  equation for \(\tilde p\) is identical.
+\end{enumerate}
+
+\subsection{Conclusion}\label{conclusion}
+
+\begin{itemize}
+\tightlist
+\item
+  Both situations pick the \textbf{same} relative price:\\
+  \[
+    p^* = \tilde p.
+  \]
+\item
+  Home faces the same price in both cases, so by price‐taking behavior
+  its production \& consumption plan \(\bigl(y_1^H,y_2^H\bigr)\) is
+  \textbf{identical}.
+\item
+  \textbf{Therefore} the two equilibria coincide for the home country.
+\end{itemize}
+
+\subsection{Graphical Intuition}\label{graphical-intuition}
+
+\begin{itemize}
+\tightlist
+\item
+  In both pictures you draw the world relative-supply curve \(RS_W(p)\)
+  and the relative-demand curve \(RD(p)\).
+\item
+  The intersection \(RS_W=RD\) is \textbf{exactly} the same point in
+  Situation 1 and Situation 2.
+\item
+  Home then ``picks off'' its point on its own PPF at that price---so
+  you end up at the same coordinate in both diagrams.
+\end{itemize}
+
+\(\boxed{\text{Hence the equilibria are equal.}}\)
+
+\section{Homework 4}\label{homework-4}
+
+\subsection{\texorpdfstring{Q1. Equilibrium in DFS (1977) with
+\(U=\int_{0}^{1}b(z)\ln c(z)\,dz\)}{Q1. Equilibrium in DFS (1977) with U=\textbackslash int\_\{0\}\^{}\{1\}b(z)\textbackslash ln c(z)\textbackslash,dz}}\label{q1.-equilibrium-in-dfs-1977-with-uint_01bzln-czdz}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Preferences \& demand}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Utility:\\
+    \[
+      U=\int_{0}^{1}b(z)\ln c(z)\,dz,\quad \int_{0}^{1}b(z)\,dz=1.
+    \]
+  \item
+    FOC w.r.t.~\(c(z)\):\\
+    \[
+      \frac{b(z)}{c(z)}=\lambda\,p(z)
+      \;\;\Longrightarrow\;\;
+      c(z)=\frac{b(z)}{\lambda\,p(z)}.
+    \]
+  \item
+    Budget \(\int_{0}^{1}p(z)c(z)\,dz=I\) implies \(\lambda=1/I\), so \[
+      c(z)=I\,\frac{b(z)}{p(z)}.
+    \]
+  \item
+    \textbf{Expenditure share} on good \(z\):\\
+    \(\,p(z)\,c(z)=I\,b(z)\) → ``Cobb--Douglas'' across the continuum.
+  \end{itemize}
+\item
+  \textbf{Production \& zero profit}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Home has unit‐labour requirements \(a(z)\), foreign \(a^*(z)\).\\
+  \item
+    Let relative wage \(\omega=w/w^*\).\\
+  \item
+    Zero‐profit prices: \[
+      p(z)=
+      \begin{cases}
+        w\,a(z),& z<z^*,\\
+        w^*\,a^*(z),& z>z^*,
+      \end{cases}
+    \] where the \textbf{cutoff} \(z^*\) solves \[
+      w\,a(z^*)=w^*\,a^*(z^*)
+      \quad\Longrightarrow\quad
+      \omega=\frac{a^*(z^*)}{a(z^*)}.
+    \]
+  \end{itemize}
+\item
+  \textbf{World relative‐supply \& demand}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{Supply} of home goods (z ∈ {[}0,z*{]}) vs.~foreign goods (z
+    ∈ {[}z*,1{]}):\\
+    \[
+      RS(\omega)
+      =\frac{L\int_{0}^{z^*}\!1/a(z)\,dz}
+            {L^*\int_{z^*}^{1}\!1/a^*(z)\,dz}.
+    \]
+  \item
+    \textbf{Demand} for home goods: \[
+      RD(\omega)
+      =\frac{\displaystyle\int_{0}^{z^*}\!b(z)\,dz}
+            {\displaystyle\int_{z^*}^{1}\!b(z)\,dz}.
+    \]
+  \item
+    \textbf{Equilibrium} requires simultaneously \[
+      RS(\omega)=RD(\omega),
+      \quad
+      \omega=\frac{a^*(z^*)}{a(z^*)}.
+    \]
+  \end{itemize}
+\item
+  \textbf{Effect of \(b(z)\)}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Only the \textbf{shape} of the relative‐demand curve \(RD(\omega)\)
+    changes (weights \(b(z)\) instead of uniform).\\
+  \item
+    The \textbf{qualitative} features---existence of a unique cutoff
+    \(z^*\), full specialization on each side---remain intact.
+  \end{itemize}
+\end{enumerate}
+
+\subsection{\texorpdfstring{Q2. Intuitive transition when
+\(L^*\to L^{*\prime}\)}{Q2. Intuitive transition when L\^{}*\textbackslash to L\^{}\{*\textbackslash prime\}}}\label{q2.-intuitive-transition-when-lto-lprime}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Foreign labor rises ⇒ supply shift}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Larger \(L^*\) raises foreign output of every good ⇒ world
+    \textbf{relative supply} of home goods falls.
+  \end{itemize}
+\item
+  \textbf{Relative‐price adjustment}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    To clear the market, the relative price \(\omega=w/w^*\) must
+    \textbf{decline}.\\
+  \item
+    Graphically, the supply curve \(A(z)\) shifts so its intersection
+    with demand \(B(z)\) moves from \(E\) to \(E'\).
+  \end{itemize}
+\item
+  \textbf{New cutoff \(z^*\)}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Lower \(\omega\) solves \(\omega=a^*(z^*)/a(z^*)\) at a
+    \textbf{smaller} \(z^*\).\\
+  \item
+    Home now specializes in a narrower set of goods (only the
+    lowest-\(z\) range).
+  \end{itemize}
+\item
+  \textbf{Partial-equilibrium analogy}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Just like ↑ supply in a single market → ↓ price + new quantity, here
+    ↑ foreign labor endowment → ↓ relative price of home goods +
+    adjusted specialization until the new intersection \(E'\) clears the
+    world market.
+  \end{itemize}
+\end{enumerate}
+
+\section{Homework 5}\label{homework-5}
+
+\textbf{Answer.} Since \[
+a_i(j)\sim\mathrm{Weibull}\bigl(\text{shape}=\alpha_i,\;\text{scale}=\tfrac1{\lambda_i}\bigr)
+\] and \[
+p_{ni}(j)=\frac{w_i}{d_{ni}}\;a_i(j),
+\] it follows that \(p_{ni}(j)\) is also Weibull with
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Shape parameter:} \(\alpha_i\)\\
+\item
+  \textbf{Scale parameter:}
+  \(\displaystyle \frac{w_i}{d_{ni}\,\lambda_i}\)
+\end{itemize}
+
+Its CDF is \[
+\begin{aligned}
+F_{p}(x)
+&= \Pr\bigl(p_{ni}\le x\bigr)
+= \Pr\Bigl(a_i \le \tfrac{d_{ni}}{w_i}\,x\Bigr)\\
+&=1-\exp\!\Bigl[-\bigl(\lambda_i\cdot\tfrac{d_{ni}}{w_i}\,x\bigr)^{\alpha_i}\Bigr].
+\end{aligned}
+\]
+
+\section{Homework 6}\label{homework-6}
+
+Let\\
+\[
+V\bigl(y_{1};L,K\bigr)
+\;=\;
+\max_{\substack{L_{1}+L_{2}\le L\\K_{1}+K_{2}\le K\\f_{1}(L_{1},K_{1})\ge y_{1}}}
+f_{2}(L_{2},K_{2})
+\] be the PPF viewed as a function of endowments \((L,K)\) at fixed
+\(y_{1}\). Then:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Envelope theorem}\\
+  At the optimum, \[
+  \frac{\partial V}{\partial L}
+  = \lambda_{L},
+  \quad
+  \frac{\partial V}{\partial K}
+  = \lambda_{K},
+  \] where \(\lambda_{L},\lambda_{K}\) are the Lagrange multipliers on
+  the labor and capital constraints.
+\item
+  \textbf{CRS ⇒ homogeneity}\\
+  Because each sector's technology is CRS, \[
+  \lambda_{L}\,L \;+\;\lambda_{K}\,K
+  \;=\;
+  f_{2}(L_{2}^{*},K_{2}^{*})
+  \;=\;
+  V(y_{1};L,K).
+  \]
+\item
+  \textbf{Tripling endowments}\\
+  Take \((L,K)\to(3L,3K)\). Then by the envelope theorem and
+  homogeneity, \[
+  V(y_{1};3L,3K)
+  -V(y_{1};L,K)
+  =2\bigl(\lambda_{L}L+\lambda_{K}K\bigr)
+  =2\,V(y_{1};L,K).
+  \] Hence \[
+    V(y_{1};3L,3K)
+    =3\,V(y_{1};L,K).
+  \]
+\item
+  \textbf{Conclusion: outward shift}\\
+  For every \(y_{1}\), the maximum feasible \(y_{2}\) triples.
+  Equivalently, \[
+    \boxed{
+      \text{New PPF: }
+      y_{2}^{\rm new}(y_{1})
+      =3\,y_{2}^{\rm old}(y_{1})
+    }.
+  \] The frontier simply scales out by a factor of 3, with its slope at
+  each point unchanged.
+\end{enumerate}
+
+\end{document}

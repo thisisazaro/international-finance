@@ -1,0 +1,351 @@
+---
+title: "Homeworks"
+author: "Iushin Nikolai"
+date: "2025-04-27"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    number_sections: true
+    highlight: tango
+    keep_tex: true
+    df_print: kable
+knitr:
+  opts_chunk:
+    echo: false
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Homework 2
+
+## Q1. CES Utility
+
+**Given**  
+\[
+u = \Bigl(\gamma\,y_{1}^{\frac{\sigma-1}{\sigma}} + y_{2}^{\frac{\sigma-1}{\sigma}}\Bigr)^{\frac{\sigma}{\sigma-1}},
+\qquad
+\text{budget: }p_{1}y_{1} + p_{2}y_{2} = I.
+\]
+
+**Find** the ratio \(y_{1}/y_{2}\) that maximizes \(u\).
+
+**Solution**  
+1. Define the intermediate function  
+   \[
+   V = \gamma\,y_{1}^{\frac{\sigma-1}{\sigma}} + y_{2}^{\frac{\sigma-1}{\sigma}}
+   \]
+   and set up the Lagrangian  
+   \[
+   \mathcal{L} = V + \lambda\,(I - p_{1}y_{1} - p_{2}y_{2}).
+   \]
+2. First‐order conditions:  
+   \[
+   \frac{\partial\mathcal{L}}{\partial y_{1}}
+   = \gamma\,\frac{\sigma-1}{\sigma}\,y_{1}^{\frac{\sigma-1}{\sigma}-1} - \lambda\,p_{1} = 0,
+   \quad
+   \frac{\partial\mathcal{L}}{\partial y_{2}}
+   = \frac{\sigma-1}{\sigma}\,y_{2}^{\frac{\sigma-1}{\sigma}-1} - \lambda\,p_{2} = 0.
+   \]
+3. Divide the two equations to eliminate \(\lambda\):  
+   \[
+   \frac{\gamma\,\frac{\sigma-1}{\sigma}\,y_{1}^{\frac{\sigma-1}{\sigma}-1}}{\frac{\sigma-1}{\sigma}\,y_{2}^{\frac{\sigma-1}{\sigma}-1}}
+   = \frac{p_{1}}{p_{2}}
+   \;\Longrightarrow\;
+   \gamma\,y_{1}^{-\tfrac{1}{\sigma}}\,p_{2}
+   = y_{2}^{-\tfrac{1}{\sigma}}\,p_{1}
+   \;\Longrightarrow\;
+   \Bigl(\frac{y_{1}}{y_{2}}\Bigr)^{\!\tfrac{1}{\sigma}}
+   = \frac{\gamma\,p_{2}}{p_{1}}.
+   \]
+4. Therefore, the optimal ratio is  
+   \[
+   \boxed{
+     \frac{y_{1}}{y_{2}}
+     = \biggl(\gamma\,\frac{p_{2}}{p_{1}}\biggr)^{\!\sigma}
+   }.
+   \]
+
+
+
+## Q2. Cobb–Douglas in an Open Economy
+
+**Given**  
+\[
+U(y_{1},y_{2}) = y_{1}^{\alpha}\,y_{2}^{\beta},\quad \alpha + \beta = 1,
+\]
+endowment \((y_{1}^{e},y_{2}^{e})\), world prices \((p_{1},p_{2})\).
+
+1. **Income** (value of endowment):  
+   \[
+   I = p_{1}\,y_{1}^{e} + p_{2}\,y_{2}^{e}.
+   \]
+2. **Budget constraint**  
+   \[
+   p_{1}\,y_{1} + p_{2}\,y_{2} = I.
+   \]
+3. **Maximization** yields standard expenditure shares:  
+   \[
+   p_{1}\,y_{1} = \alpha\,I,
+   \quad
+   p_{2}\,y_{2} = \beta\,I.
+   \]
+4. **Demand functions**:  
+   \[
+   \boxed{
+     y_{1}^{*} = \frac{\alpha\,I}{p_{1}},
+     \quad
+     y_{2}^{*} = \frac{\beta\,I}{p_{2}}
+   }.
+   \]
+5. Substituting \(I = p_{1}\,y_{1}^{e} + p_{2}\,y_{2}^{e}\) gives:  
+   \[
+   y_{1}^{*}
+   = \alpha\Bigl(y_{1}^{e} + \tfrac{p_{2}}{p_{1}}\,y_{2}^{e}\Bigr),
+   \quad
+   y_{2}^{*}
+   = \beta\Bigl(\tfrac{p_{1}}{p_{2}}\,y_{1}^{e} + y_{2}^{e}\Bigr).
+   \]
+
+
+
+# Homework 3 – Equivalence of the Two Equilibria
+
+**Claim.** The home country’s equilibrium under  
+1. “Separate free-trade” (Situation 1) and  
+2. “Integrated world economy” (Situation 2)  
+
+coincide. In both cases the relative price \(p\) is the same, so home produces and consumes the same bundle.
+
+## Definitions
+
+- Let  
+  \[
+    RS_H(p) \;=\;\text{home’s relative‐supply of good 1 (units of 1 per 2) at price }p,
+  \]
+  \[
+    RS_F(p) \;=\;\text{foreign’s relative‐supply of good 1 at price }p,
+  \]
+  \[
+    RS_W(p)\;=\;RS_H(p)+RS_F(p)\quad\text{(world relative-supply).}
+  \]
+- Let \(RD(p)\) be world relative-demand (units of 1 per 2) at price \(p\).
+
+
+## Situation 1: Separate Free Trade
+
+1. **World price determination.**  
+   Since both countries take the same world price \(p\) and supply goods competitively, the **aggregate equilibrium** price \(p^*\) solves
+   \[
+   RS_W(p^*) \;=\; RD(p^*)\,.
+   \]
+2. **Country‐specific outcome.**  
+   At \(p^*\), home chooses its profit‐maximizing production point on its PPF and its utility‐maximizing consumption on its indifference map. Call this bundle \(\bigl(y_1^H,y_2^H\bigr)\).
+
+
+## Situation 2: Integrated World Economy
+
+1. **Aggregate economy.**  
+   Treat home + foreign as one big country with relative‐supply  
+   \[
+     RS_W(p)=RS_H(p)+RS_F(p).
+   \]
+2. **World equilibrium.**  
+   The integrated economy’s equilibrium price \(\tilde p\) solves the **same** equation
+   \[
+   RS_W(\tilde p) \;=\; RD(\tilde p).
+   \]
+3. **Specialization assumption.**  
+   At \(\tilde p\) (between the two autarky prices), home fully specializes in good 1 and foreign in good 2, but the determining equation for \(\tilde p\) is identical.
+
+## Conclusion
+
+- Both situations pick the **same** relative price:  
+  \[
+    p^* = \tilde p.
+  \]
+- Home faces the same price in both cases, so by price‐taking behavior its production & consumption plan \(\bigl(y_1^H,y_2^H\bigr)\) is **identical**.
+- **Therefore** the two equilibria coincide for the home country.
+
+
+## Graphical Intuition
+
+- In both pictures you draw the world relative-supply curve \(RS_W(p)\) and the relative-demand curve \(RD(p)\).
+- The intersection \(RS_W=RD\) is **exactly** the same point in Situation 1 and Situation 2.
+- Home then “picks off” its point on its own PPF at that price—so you end up at the same coordinate in both diagrams.
+
+\(\boxed{\text{Hence the equilibria are equal.}}\)
+
+
+# Homework 4
+
+## Q1. Equilibrium in DFS (1977) with \(U=\int_{0}^{1}b(z)\ln c(z)\,dz\)
+
+1. **Preferences & demand**  
+   - Utility:  
+     \[
+       U=\int_{0}^{1}b(z)\ln c(z)\,dz,\quad \int_{0}^{1}b(z)\,dz=1.
+     \]
+   - FOC w.r.t.\ \(c(z)\):  
+     \[
+       \frac{b(z)}{c(z)}=\lambda\,p(z)
+       \;\;\Longrightarrow\;\;
+       c(z)=\frac{b(z)}{\lambda\,p(z)}.
+     \]
+   - Budget \(\int_{0}^{1}p(z)c(z)\,dz=I\) implies 
+     \(\lambda=1/I\), so
+     \[
+       c(z)=I\,\frac{b(z)}{p(z)}.
+     \]
+   - **Expenditure share** on good \(z\):  
+     \(\,p(z)\,c(z)=I\,b(z)\) → “Cobb–Douglas” across the continuum.
+
+2. **Production & zero profit**  
+   - Home has unit‐labour requirements \(a(z)\), foreign \(a^*(z)\).  
+   - Let relative wage \(\omega=w/w^*\).  
+   - Zero‐profit prices:
+     \[
+       p(z)=
+       \begin{cases}
+         w\,a(z),& z<z^*,\\
+         w^*\,a^*(z),& z>z^*,
+       \end{cases}
+     \]
+     where the **cutoff** \(z^*\) solves
+     \[
+       w\,a(z^*)=w^*\,a^*(z^*)
+       \quad\Longrightarrow\quad
+       \omega=\frac{a^*(z^*)}{a(z^*)}.
+     \]
+
+3. **World relative‐supply & demand**  
+   - **Supply** of home goods (z ∈ [0,z*]) vs. foreign goods (z ∈ [z*,1]):  
+     \[
+       RS(\omega)
+       =\frac{L\int_{0}^{z^*}\!1/a(z)\,dz}
+             {L^*\int_{z^*}^{1}\!1/a^*(z)\,dz}.
+     \]
+   - **Demand** for home goods:
+     \[
+       RD(\omega)
+       =\frac{\displaystyle\int_{0}^{z^*}\!b(z)\,dz}
+             {\displaystyle\int_{z^*}^{1}\!b(z)\,dz}.
+     \]
+   - **Equilibrium** requires simultaneously
+     \[
+       RS(\omega)=RD(\omega),
+       \quad
+       \omega=\frac{a^*(z^*)}{a(z^*)}.
+     \]
+
+4. **Effect of \(b(z)\)**  
+   - Only the **shape** of the relative‐demand curve \(RD(\omega)\) changes (weights \(b(z)\) instead of uniform).  
+   - The **qualitative** features—existence of a unique cutoff \(z^*\), full specialization on each side—remain intact.
+
+
+## Q2. Intuitive transition when \(L^*\to L^{*\prime}\)
+
+1. **Foreign labor rises ⇒ supply shift**  
+   - Larger \(L^*\) raises foreign output of every good ⇒ world **relative supply** of home goods falls.
+
+2. **Relative‐price adjustment**  
+   - To clear the market, the relative price \(\omega=w/w^*\) must **decline**.  
+   - Graphically, the supply curve \(A(z)\) shifts so its intersection with demand \(B(z)\) moves from \(E\) to \(E'\).
+
+3. **New cutoff \(z^*\)**  
+   - Lower \(\omega\) solves \(\omega=a^*(z^*)/a(z^*)\) at a **smaller** \(z^*\).  
+   - Home now specializes in a narrower set of goods (only the lowest-\(z\) range).
+
+4. **Partial-equilibrium analogy**  
+   - Just like ↑ supply in a single market → ↓ price + new quantity, here ↑ foreign labor endowment → ↓ relative price of home goods + adjusted specialization until the new intersection \(E'\) clears the world market.
+   
+   
+# Homework 5   
+   
+**Answer.** Since 
+\[
+a_i(j)\sim\mathrm{Weibull}\bigl(\text{shape}=\alpha_i,\;\text{scale}=\tfrac1{\lambda_i}\bigr)
+\]
+and 
+\[
+p_{ni}(j)=\frac{w_i}{d_{ni}}\;a_i(j),
+\]
+it follows that \(p_{ni}(j)\) is also Weibull with
+
+- **Shape parameter:** \(\alpha_i\)  
+- **Scale parameter:** \(\displaystyle \frac{w_i}{d_{ni}\,\lambda_i}\)
+
+Its CDF is
+\[
+\begin{aligned}
+F_{p}(x)
+&= \Pr\bigl(p_{ni}\le x\bigr)
+= \Pr\Bigl(a_i \le \tfrac{d_{ni}}{w_i}\,x\Bigr)\\
+&=1-\exp\!\Bigl[-\bigl(\lambda_i\cdot\tfrac{d_{ni}}{w_i}\,x\bigr)^{\alpha_i}\Bigr].
+\end{aligned}
+\]
+   
+   
+# Homework 6
+
+Let  
+\[
+V\bigl(y_{1};L,K\bigr)
+\;=\;
+\max_{\substack{L_{1}+L_{2}\le L\\K_{1}+K_{2}\le K\\f_{1}(L_{1},K_{1})\ge y_{1}}}
+f_{2}(L_{2},K_{2})
+\]
+be the PPF viewed as a function of endowments \((L,K)\) at fixed \(y_{1}\).  Then:
+
+1. **Envelope theorem**  
+   At the optimum,
+   \[
+   \frac{\partial V}{\partial L}
+   = \lambda_{L},
+   \quad
+   \frac{\partial V}{\partial K}
+   = \lambda_{K},
+   \]
+   where \(\lambda_{L},\lambda_{K}\) are the Lagrange multipliers on the labor and capital constraints.
+
+2. **CRS ⇒ homogeneity**  
+   Because each sector’s technology is CRS,
+   \[
+   \lambda_{L}\,L \;+\;\lambda_{K}\,K
+   \;=\;
+   f_{2}(L_{2}^{*},K_{2}^{*})
+   \;=\;
+   V(y_{1};L,K).
+   \]
+
+3. **Tripling endowments**  
+   Take \((L,K)\to(3L,3K)\).  Then by the envelope theorem and homogeneity,
+   \[
+   V(y_{1};3L,3K)
+   -V(y_{1};L,K)
+   =2\bigl(\lambda_{L}L+\lambda_{K}K\bigr)
+   =2\,V(y_{1};L,K).
+   \]
+   Hence
+   \[
+     V(y_{1};3L,3K)
+     =3\,V(y_{1};L,K).
+   \]
+
+4. **Conclusion: outward shift**  
+   For every \(y_{1}\), the maximum feasible \(y_{2}\) triples.  Equivalently,
+   \[
+     \boxed{
+       \text{New PPF: }
+       y_{2}^{\rm new}(y_{1})
+       =3\,y_{2}^{\rm old}(y_{1})
+     }.
+   \]
+   The frontier simply scales out by a factor of 3, with its slope at each point unchanged.
+
+
+
+
